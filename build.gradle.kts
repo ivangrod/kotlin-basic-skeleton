@@ -1,14 +1,20 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.5.21"
+    kotlin("jvm") version "1.6.10"
     id("com.diffplug.spotless") version "5.7.0"
-    application
+    java
 }
 
-group = "com.codely"
-version = "0.0.1-SNAPSHOT"
+group = "org.ivangrod"
+version = "1.0.0-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
+
+configurations {
+    compileOnly {
+        extendsFrom(configurations.annotationProcessor.get())
+    }
+}
 
 repositories {
     mavenCentral()
@@ -22,19 +28,32 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
-application {
-    mainClass.set("com.codely.demo.CodelyberKt")
-}
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "11"
+subprojects {
+
+    apply {
+        plugin("org.jetbrains.kotlin.jvm")
     }
-}
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+    dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-reflect")
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    }
+
+    tasks.withType<KotlinCompile> {
+        kotlinOptions {
+            freeCompilerArgs = listOf("-Xjsr305=strict")
+            jvmTarget = "11"
+        }
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
+
+    tasks.check {
+        dependsOn(tasks.spotlessCheck)
+    }
 }
 
 spotless {
@@ -49,8 +68,4 @@ spotless {
     kotlinGradle {
         ktlint()
     }
-}
-
-tasks.check {
-    dependsOn(tasks.spotlessCheck)
 }
